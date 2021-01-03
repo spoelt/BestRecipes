@@ -1,7 +1,7 @@
 package com.example.bestrecipes.di
 
 import android.content.Context
-import com.example.bestrecipes.BaseApplication
+import com.example.bestrecipes.presentation.ui.BaseApplication
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
