@@ -31,8 +31,16 @@ class RecipeListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // classic way to observe LiveData:
+        /*viewModel.recipes.observe(viewLifecycleOwner, { recipes ->
+            // update UI
+        })*/
+
         return ComposeView(requireContext()).apply {
             setContent {
+                // "observe" recipes in Composable:
+                val recipes = viewModel.recipes.value
+
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "Recipe List",
