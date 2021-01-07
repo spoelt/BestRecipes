@@ -25,7 +25,7 @@ class RecipeListViewModel @ViewModelInject constructor(
     // optimized MutableState for Compose:
     val recipes: MutableState<List<Recipe>> = mutableStateOf(listOf())
 
-    val query = mutableStateOf("Chicken")
+    val query = mutableStateOf("")
 
     init {
         newSearch("Chicken")
