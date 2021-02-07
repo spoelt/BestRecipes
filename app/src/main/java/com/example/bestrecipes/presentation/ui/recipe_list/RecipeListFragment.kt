@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.ScrollableRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -21,6 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.example.bestrecipes.presentation.components.FoodCategoryChip
 import com.example.bestrecipes.presentation.components.RecipeCard
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -51,7 +54,7 @@ class RecipeListFragment : Fragment() {
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        color = MaterialTheme.colors.primary,
+                        color = Color.White,
                         elevation = 8.dp
                     ) {
                         Column {
@@ -89,6 +92,17 @@ class RecipeListFragment : Fragment() {
                                     ),
                                     backgroundColor = MaterialTheme.colors.surface
                                 )
+                            }
+                            ScrollableRow(modifier = Modifier.fillMaxWidth()) {
+                                for (category in getAllFoodCategories()) {
+                                    FoodCategoryChip(
+                                        category = category.value,
+                                        onExecuteSearch = {
+                                            viewModel.onQueryChanged(it)
+                                            viewModel.newSearch(it)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
