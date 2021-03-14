@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key.Companion.Search
 import androidx.compose.ui.platform.ComposeView
@@ -22,13 +23,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.example.bestrecipes.presentation.components.CircularIndeterminateProgressBar
-import com.example.bestrecipes.presentation.components.LoadingRecipeListShimmer
-import com.example.bestrecipes.presentation.components.RecipeCard
-import com.example.bestrecipes.presentation.components.SearchAppBar
+import androidx.lifecycle.lifecycleScope
+import com.example.bestrecipes.presentation.components.*
 import com.example.bestrecipes.presentation.theme.AppTheme
 import com.example.bestrecipes.presentation.ui.BaseApplication
+import com.example.bestrecipes.util.SnackbarController
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -37,22 +38,19 @@ class RecipeListFragment : Fragment() {
     @Inject
     lateinit var application: BaseApplication
 
+    private val snackbarController = SnackbarController(lifecycleScope)
+
     private val viewModel: RecipeListViewModel by viewModels()
     // use 'by activityViewModels()' if you want to share the viewModel between different fragments
 
+    @ExperimentalMaterialApi
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // classical way to observe LiveData:
-        /*viewModel.recipes.observe(viewLifecycleOwner, { recipes ->
-            // update UI
-        })*/
-
         return ComposeView(requireContext()).apply {
             setContent {
-
                 AppTheme(
                     darkTheme = application.isDark.value
                 ) {
@@ -65,12 +63,26 @@ class RecipeListFragment : Fragment() {
 
                     val loading = viewModel.loading.value
 
+                    val scaffoldState = rememberScaffoldState()
+
                     Scaffold(
                         topBar = {
                             SearchAppBar(
                                 query = query,
                                 onQueryChanged = viewModel::onQueryChanged,
-                                onExecuteSearch = viewModel::newSearch,
+                                onExecuteSearch = {
+                                    if (viewModel.selectedCategory.value?.value == "Milk") {
+                                        snackbarController.getScope().launch {
+                                            snackbarController.showSnackbar(
+                                                scaffoldState = scaffoldState,
+                                                message = "Invalid category: MILK",
+                                                actionLabel = "Hide"
+                                            )
+                                        }
+                                    } else {
+                                        viewModel.newSearch()
+                                    }
+                                },
                                 scrollPosition = viewModel.categoryScrollPosition,
                                 selectedCategory = selectedCategory,
                                 onSelectedCategoryChanged = viewModel::onSelectedCategoryChanged,
@@ -79,13 +91,11 @@ class RecipeListFragment : Fragment() {
                                     application.toggleTheme()
                                 }
                             )
-                        }/*,
-                        bottomBar = {
-                            MyBottomBar()
                         },
-                        drawerContent = {
-                            MyDrawer()
-                        }*/
+                        scaffoldState = scaffoldState,
+                        snackbarHost = {
+                            scaffoldState.snackbarHostState
+                        }
                     ) {
                         Box(
                             modifier = Modifier
@@ -106,47 +116,20 @@ class RecipeListFragment : Fragment() {
                             CircularIndeterminateProgressBar(
                                 isDisplayed = loading
                             )
+
                             // whatever should be shown "in front" must be the least entry in a box
+
+                            DefaultSnackbar(
+                                snackbarHostState = scaffoldState.snackbarHostState,
+                                onDismiss = {
+                                    scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                                },
+                                modifier = Modifier.align(Alignment.BottomCenter)
+                            )
                         }
                     }
                 }
             }
         }
-    }
-}
-
-// just for illustration purposes:
-
-@Composable
-fun MyBottomBar() {
-    BottomNavigation(
-        elevation = 12.dp
-    ) {
-        BottomNavigationItem(
-            icon = { Icon(Icons.Default.BrokenImage) },
-            selected = false,
-            onClick = { }
-        )
-        BottomNavigationItem(
-            icon = { Icon(Icons.Default.Search) },
-            selected = false,
-            onClick = { }
-        )
-        BottomNavigationItem(
-            icon = { Icon(Icons.Default.AccountBalanceWallet) },
-            selected = true,
-            onClick = { }
-        )
-    }
-}
-
-@Composable
-fun MyDrawer(){
-    Column() {
-        Text("Item1")
-        Text("Item2")
-        Text("Item3")
-        Text("Item4")
-        Text("Item5")
     }
 }
